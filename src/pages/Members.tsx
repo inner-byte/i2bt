@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Search, Upload } from 'lucide-react';
+import { Search } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -9,7 +9,7 @@ import Pagination from '../components/Pagination';
 import debounce from 'lodash/debounce';
 
 interface Member {
-  id: string;
+  uid: string;
   name: string;
   role: string;
   avatar: string;
@@ -86,72 +86,73 @@ const Members: React.FC = () => {
   if (error) return <div className="text-center text-red-500">Error: {error.message}</div>;
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6">Members Directory</h1>
-      <div className="mb-6 relative">
-        <input
-          type="text"
-          placeholder="Search members..."
-          className="w-full p-2 pl-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          onChange={handleSearchChange}
-        />
-        <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Members</h1>
+      <div className="mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search members..."
+            onChange={handleSearchChange}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg"
+          />
+          <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
+        </div>
       </div>
-      {user && (
-        <form onSubmit={handleSubmit} className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Add New Member</h2>
-          <input
-            type="text"
-            placeholder="Name"
-            className="input mb-4"
-            value={newMember.name}
-            onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Role"
-            className="input mb-4"
-            value={newMember.role}
-            onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
-            required
-          />
-          <div className="mb-4">
-            <label htmlFor="avatar" className="btn btn-secondary flex items-center justify-center">
-              <Upload className="mr-2" size={20} />
-              Upload Avatar
-            </label>
-            <input
-              id="avatar"
-              type="file"
-              className="hidden"
-              onChange={(e) => setAvatar(e.target.files ? e.target.files[0] : null)}
-            />
-            {avatar && <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{avatar.name}</p>}
-          </div>
-          <button type="submit" className="btn btn-primary">Add Member</button>
-        </form>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data?.members.map(member => (
-          <Link key={member.id} to={`/profile/${member.id}`} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
-            <div className="flex items-center space-x-4">
-              <img src={member.avatar} alt={member.name} className="w-16 h-16 rounded-full object-cover" />
-              <div>
-                <h2 className="text-xl font-semibold dark:text-white">{member.name}</h2>
-                <p className="text-gray-600 dark:text-gray-300">{member.role}</p>
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {data?.members.map((member) => (
+          <Link key={member.uid} to={`/profile/${member.uid}`} className="block">
+            <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition-shadow">
+              <img src={member.avatar} alt={member.name} className="w-24 h-24 rounded-full mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-center">{member.name}</h2>
+              <p className="text-gray-600 text-center">{member.role}</p>
             </div>
           </Link>
         ))}
       </div>
-      {data && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={data.totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={data?.totalPages || 1}
+        onPageChange={setCurrentPage}
+      />
+      <form onSubmit={handleSubmit} className="mt-8 bg-white shadow-md rounded-lg p-6">
+        <h2 className="text-2xl font-semibold mb-4">Add New Member</h2>
+        <div className="mb-4">
+          <label htmlFor="name" className="block text-gray-700 font-bold mb-2">Name</label>
+          <input
+            type="text"
+            id="name"
+            value={newMember.name}
+            onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="role" className="block text-gray-700 font-bold mb-2">Role</label>
+          <input
+            type="text"
+            id="role"
+            value={newMember.role}
+            onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="avatar" className="block text-gray-700 font-bold mb-2">Avatar</label>
+          <input
+            type="file"
+            id="avatar"
+            onChange={(e) => setAvatar(e.target.files?.[0] || null)}
+            className="w-full px-3 py-2 border rounded-lg"
+            accept="image/*"
+          />
+        </div>
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+          Add Member
+        </button>
+      </form>
     </div>
   );
 };
